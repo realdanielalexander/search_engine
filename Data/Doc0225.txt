@@ -1,0 +1,6 @@
+<DATE> 3-MAR-1987 09:38:33.69</DATE>
+<TITLE>KASLER CORP &lt;KASL> 1ST QTR JAN 31 NET</TITLE>
+<BODY>Shr profit three cts vs loss seven cts
+    Net profit 161,000 vs loss 367,000
+    Revs 24.3 mln vs 26.5 mln
+</BODY>

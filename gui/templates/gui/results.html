@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <!-- MDB icon -->
+    <link rel="icon" href="img/mdb-favicon.ico" type="image/x-icon">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+    <!-- Google Fonts Roboto -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{% static 'gui/css/bootstrap.min.css' %}">
+    <!-- Material Design Bootstrap -->
+    <link rel="stylesheet" href="{% static 'gui/css/mdb.min.css' %}">
+    <!-- Your custom styles (optional) -->
+    <link rel="stylesheet" href="{% static 'gui/css/style.css' %}">
+    {% if title%}
+    <title>{{title}}</title>
+    {% else %}
+    <title>Gogel</title>
+    {% endif %}
+</head>
+
+<body>
+
+    <!-- Start your project here-->
+
+    <body>
+        <!-- Search form -->
+        <img src="{% static 'gui/logo.jpg' %}" alt="Gogel">
+        <div class="md-form active-pink-2 mb-3">
+            <input class="form-control" type="text" placeholder="Search" aria-label="Search">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+        {% for result in results %}
+        <h1>{{result.title}}</h1>
+        <p>{{result.body}}</p>
+        {% endfor %}
+        Results found: {{count}}
+        Time taken: {{time}}
+        <!-- End your project here-->
+
+        <!-- jQuery -->
+        <script type="text/javascript" src="{% static 'gui/js/jquery.min.js' %}"></script>
+        <!-- Bootstrap tooltips -->
+        <script type="text/javascript" src="{% static 'gui/js/popper.min.js' %}"></script>
+        <!-- Bootstrap core JavaScript -->
+        <script type="text/javascript" src="{% static 'gui/js/bootstrap.min.js' %}"></script>
+        <!-- MDB core JavaScript -->
+        <script type="text/javascript" src="{% static 'gui/js/mdb.min.js' %}"></script>
+        <!-- Your custom scripts (optional) -->
+        <script type="text/javascript"></script>
+    </body>
+
+</html>
