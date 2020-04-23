@@ -1,0 +1,6 @@
+<DATE> 3-MAR-1987 10:41:36.86</DATE>
+<TITLE>PILLSBURY CO &lt;PSY> VOTES QUARTERLY DIVIDEND</TITLE>
+<BODY>Qtly div 25 cts vs 25 cts prior qtr
+    Pay 31 May
+    Record 1 May
+</BODY>
