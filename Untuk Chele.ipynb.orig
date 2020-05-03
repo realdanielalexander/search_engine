@@ -9,7 +9,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 6,
+=======
    "execution_count": 3,
+>>>>>>> 89970c9fcac61ae026107c25df9020af5b763c23
    "metadata": {},
    "outputs": [],
    "source": [
@@ -21,6 +25,7 @@
     "import pandas as pd\n",
     "import string\n",
     "import ast\n",
+    "import datetime\n",
     "from itertools import islice\n",
     "\n",
     "from nltk.tokenize import sent_tokenize, word_tokenize\n",
@@ -786,7 +791,11 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 9,
+=======
    "execution_count": 6,
+>>>>>>> 89970c9fcac61ae026107c25df9020af5b763c23
    "metadata": {},
    "outputs": [],
    "source": [
@@ -801,7 +810,7 @@
     "\n",
     "def build_index_tfidf():\n",
     "    df_tfidf = pd.read_csv('Konstruksi Indeks.csv')\n",
-    "    doc = df_tfidf['Documents']\n",
+    "    doc = df_tfidf['Documents'][keys]\n",
     "    term = df_tfidf['Term']\n",
     "    \n",
     "    \n",
@@ -910,6 +919,35 @@
   },
   {
    "cell_type": "code",
+<<<<<<< HEAD
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "build_index_tfidf()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'max_range' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-13-339e4b0a7050>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mtfidf\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m\"Chairman closed the last\"\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[1;32m<ipython-input-9-f290dfc8d7b3>\u001b[0m in \u001b[0;36mtfidf\u001b[1;34m(query)\u001b[0m\n\u001b[0;32m     54\u001b[0m \u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m     55\u001b[0m     \u001b[1;32mfor\u001b[0m \u001b[0mq\u001b[0m \u001b[1;32min\u001b[0m \u001b[0mdata\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m---> 56\u001b[1;33m         \u001b[1;32mfor\u001b[0m \u001b[0mi\u001b[0m \u001b[1;32min\u001b[0m \u001b[0mrange\u001b[0m \u001b[1;33m(\u001b[0m\u001b[1;36m0\u001b[0m\u001b[1;33m,\u001b[0m\u001b[0mmax_range\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m\u001b[0;32m     57\u001b[0m             \u001b[0mni\u001b[0m \u001b[1;33m=\u001b[0m \u001b[1;36m0\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m     58\u001b[0m             \u001b[0mstart\u001b[0m \u001b[1;33m=\u001b[0m \u001b[1;36m2\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n",
+      "\u001b[1;31mNameError\u001b[0m: name 'max_range' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "tfidf(\"Chairman closed the last\")"
+=======
    "execution_count": 16,
    "metadata": {},
    "outputs": [
@@ -1094,6 +1132,7 @@
     "\n",
     "\n",
     "cobain('chairman closed the last').items()"
+>>>>>>> 89970c9fcac61ae026107c25df9020af5b763c23
    ]
   },
   {
