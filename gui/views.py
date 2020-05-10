@@ -14,7 +14,6 @@ import pandas as pd
 import string
 import ast
 import xml.dom.minidom
-# import xml.parsers.expat
 import math
 from itertools import islice
 
@@ -200,7 +199,6 @@ def home(request):
             lambdaa = form.cleaned_data.get('lambdaa')
             user_input = query.lower()
             
-            # show = build_index_language_model()
 
             docs_results = language_model(user_input, limit, lambdaa)
             founded = len(docs_results[0])
@@ -365,7 +363,6 @@ def toprank(request):
                 dictionary = dict()
                 filename = 'Doc0' + key + '.xml'
                 print('filename: ', filename)
-                # if display == 'original':
                 doc = xml.dom.minidom.parse('C:/Users/Asus/Downloads/Git/search_engine/XML/' + filename)
                 title = doc.getElementsByTagName('TITLE')
                 title = title[0].firstChild.nodeValue

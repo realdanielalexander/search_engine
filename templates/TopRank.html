@@ -75,16 +75,7 @@
                 <div class="col-md-9 col-xl-8 pt-md-2 pl-md-5">
                    <!-- <p>{{queries}}</p> -->
                     {% if query %}
-                    <p style="float:left;">Result Found: {{ founded }} &emsp;&emsp;&emsp;&emsp; Time taken: {{ times }} seconds &emsp;&emsp;&emsp;&emsp;
-                        <!-- {% if query %}
-                            <form class="form-inline my-2 my-lg-0" method="POST" action="/show">
-                                {% csrf_token %}
-                                <button onclick="location.href='{% url 'script' %}'" class="btn btn-info" name="butto" id="butto" type="submit">Show Build Index</button>
-                            </form>
-                        {% else %}
-                            Build Index : {{ show }}
-                        {% endif %} -->
-                    </p>
+                    <p style="float:left;">Result Found: {{ founded }} &emsp;&emsp;&emsp;&emsp; Time taken: {{ times }} seconds &emsp;&emsp;&emsp;&emsp; </p>
                     {% else %}
                     <p></p>
                     {% endif %}
