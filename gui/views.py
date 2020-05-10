@@ -1,312 +1,91 @@
-from dateutil import parser
-import timeit
-from .forms import SearchForm
-from django.contrib.auth.forms import UserCreationForm
-import xml.dom.minidom
-import os
-from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.contrib import messages
+from django.shortcuts import render
+from django.db import models
+from .forms import SearchForm
+from .forms import SearchForm2
+from dateutil import parser
 
-# Built search functions
+import timeit
+import datetime
+import os
 import nltk
+import re
+import pandas as pd
+import string
+import ast
+import xml.dom.minidom
+# import xml.parsers.expat
+import math
+from itertools import islice
+
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
 from nltk.corpus import wordnet
-import pandas as pd
-import numpy as np
 
+
+#Language Model
 
 def join_tags(tokens):
     for i in enumerate(tokens):
-
+        hit = 0
         index = i[0]
         y = i[1]
         width = len(y)
-
+        
+        for x in y:
+            if x is '-':
+                tokens[index] = tokens[index][0:hit] + ' ' + tokens[index][hit+1:]
+            hit += 1
+        
+        if tokens[index] is ' ':
+            tokens[index] = ''
+        
+        if tokens[index] == '  ':
+            tokens[index] = ''
+        
         if y[(width-1):width] is '.':
             tokens[index] = y[0:(width-1)]
-
-        # if tokens[index][0:1] is '-' or tokens[index][1:2] is '-':
-        #     tokens[index] = ''
-
+        
+        if tokens[index][0:1] is '-' or tokens[index][1:2] is '-':
+            tokens[index] = ''
+        
         if tokens[index][-2:-1] is "'":
             tokens[index] = tokens[index][0:-2]
-
-        if tokens[index][:1] is "'":
+        
+        if  tokens[index][:1] is "'" :
             tokens[index] = tokens[index][1:]
-
+        
         if tokens[index] is "s" or tokens[index] is "re":
             tokens[index-1] = tokens[index-1]
             tokens[index] = ''
-
+        
         if tokens[index] is '<' and tokens[index+2] is '>':
-            tokens[index+2] = '<' + tokens[index+1]+'>'
-            tokens[index] = ''
+            tokens[index+2] = '<'+ tokens[index+1]+'>'
+            tokens[index] =''
             tokens[index+1] = ''
-
+            
         if tokens[index] is '&' and tokens[index+2] is ';':
             tokens[index+2] = ''
             tokens[index] = ''
             tokens[index+1] = ''
-
+            
         if tokens[index] is '(' or tokens[index] is ')':
             tokens[index] = ''
-
+            
         if tokens[index][0:1] is ':':
             tokens[index] = ''
-
+        
         if tokens[index][0:1] is '.' and tokens[index][1:2] is '.':
             tokens[index] = ''
 
-    tokens_clean = [x for x in tokens if x !=
-                    '' and x not in ".,!?'" and x not in '<>']
-
+        if y[(width-2):(width-1)] == '.' and y[(width-1):(width)] == '0':
+            tokens[index] = y[0:(width-2)]
+        
+    tokens_clean = [x for x in tokens if x != '' and x not in ".,!?'" and x not in '<>']
+        
     return tokens_clean
-
-
-def search(user_input):
-    df_read = pd.read_csv("Konstruksi Indeks.csv")
-    df_read_copy = df_read
-    df_read_copy
-
-    # first
-    user_input = user_input.lower()
-    user_input = word_tokenize(user_input)
-    user_input = join_tags(user_input)
-
-    # second
-    indent = list()
-    for i in user_input:
-        indent.append(i)
-
-    # third
-    count = 0
-    checker = True
-    for i in indent:
-        save = ''
-        n = 0
-        y = 0
-        z = 1
-
-        list_and = list()
-        for x in df_read_copy['Term']:
-
-            if i == 'and':
-                if (indent[count-1] == df_read_copy['Term'].values[y]):
-                    for v in df_read_copy['Term']:
-                        if(indent[count+1] == df_read_copy['Term'].values[n]):
-                            # print(indent[count-1] + ' ' + i + ' ' + v)
-                            # print(df_read_copy['Documents'].values[y])
-                            # print(df_read_copy['Documents'].values[n])
-                            b = len(df_read_copy['Documents'].values[y])/7
-                            c = len(df_read_copy['Documents'].values[n])/7
-                            k = df_read_copy['Documents'].values[n][2:5]
-                            l = df_read_copy['Documents'].values[n][9:12]
-                            o = 2
-                            j = 5
-                            for m in range(max(int(b), int(c))):
-                                if(df_read_copy['Documents'].values[y][o:j] == df_read_copy['Documents'].values[n][o:j]):
-                                    list_and = df_read_copy['Documents'].values[y][o:j]
-                                    o += 7
-                                    j += 7
-                                    print("['"+list_and+"']")
-                        n += 1
-                checker = False
-
-            elif i == 'or':
-                if (indent[count-1] == df_read_copy['Term'].values[y]):
-                    for v in df_read_copy['Term']:
-                        if(indent[count+1] == df_read_copy['Term'].values[n]):
-                            # print(indent[count-1] + ' '+ i + ' ' + v + '\n')
-                            # print(indent[count-1])
-                            # print(df_read_copy['Documents'].values[y])
-                            # print(v)
-                            # print(df_read_copy['Documents'].values[n])
-                            pass
-                        n += 1
-                checker = False
-            y += 1
-        count += 1
-        if len(indent) != 1:
-            if indent[z] == indent[z-1]:
-                break
-
-    if checker == True:
-        for i in indent:
-            y = 0
-            for x in df_read_copy['Term']:
-                if (i == df_read_copy['Term'].values[y]):
-                    # print(i)
-                    # print(df_read_copy['Documents'].values[y])
-                    pass
-                y += 1
-
-    # fourth
-    # print('indent:', indent)
-    results = dict()
-    for i in indent:
-        y = 0
-        for x in df_read_copy['Term']:
-            if (i == df_read_copy['Term'].values[y]):
-                # print(i)
-                # print(df_read_copy['Documents'].values[y])
-                # print(df_read_copy['Documents'].values[y].strip("[]"))
-                list_res = df_read_copy['Documents'].values[y].strip(
-                    "[]").replace("'", "").split(', ')
-
-                results[i] = list_res
-            y += 1
-    return results
-
-# SOUNDEX
-
-
-def changeToNumber(text):
-    changenumber = []
-    texts = text
-    text_list = list(texts)
-    text_length = len(text_list)
-
-    for x in text[1:text_length]:
-        for y in x:
-            if 'a' in y or 'e' in y or 'i' in y or 'o' in y or 'u' in y or 'h' in y or 'w' in y or 'y' in y:
-                y = '0'
-            elif 'b' in y or 'f' in y or 'p' in y or 'v' in y:
-                y = '1'
-            elif 'c' in y or 'g' in y or 'j' in y or 'k' in y or 'q' in y or 's' in y or 'x' in y or 'z' in y:
-                y = '2'
-            elif 'd' in y or 't' in y:
-                y = '3'
-            elif 'l' in y:
-                y = '4'
-            elif 'm' in y or 'n' in y:
-                y = '5'
-            elif 'r' in y:
-                y = '6'
-            changenumber.append(y)
-    return changenumber
-
-
-def changeZero(text):
-    changezero = []
-
-    for i in text:
-        if i is '0':
-            changezero.append(None)
-        else:
-            changezero.append(i)
-    return changezero
-
-
-def deleteNone(text):
-    nones = []
-
-    for val in text:
-        if val != None:
-            nones.extend(val)
-    return nones
-
-
-def listToString(s):
-    str1 = ""
-    return(str1.join(s))
-
-
-def delete_consequent(s):
-    list_s = s
-    for i in range(len(s)-1):
-        if list_s[i] == list_s[i+1]:
-            list_s[i] = None
-    return list_s
-
-
-def soundex(text):
-    texts = text.lower()
-    text_list = list(texts)
-    text_length = len(text_list)
-
-    change_to_number_list = []
-
-    change_to_number_list = changeToNumber(text_list)
-
-    index_number = []
-
-    # ambil huruf pertama
-    index_number.extend(text_list[0:1])
-
-    # menambahkan char berikutnya yang sudah diubah menjadi angka
-    index_number.extend(change_to_number_list)
-
-    change_zero = []
-    change_zero = changeZero(index_number)
-
-    deleted_consequent = delete_consequent(change_zero)
-    none_value = []
-
-    none_value = deleteNone(change_zero)
-
-    results = listToString(none_value)
-
-    return results
-
-
-def levenshtein(seq1, seq2):
-    size_x = len(seq1) + 1
-    size_y = len(seq2) + 1
-    matrix = np.zeros((size_x, size_y))
-    for x in range(size_x):
-        matrix[x, 0] = x
-    for y in range(size_y):
-        matrix[0, y] = y
-
-    for x in range(1, size_x):
-        for y in range(1, size_y):
-            if seq1[x-1] == seq2[y-1]:
-                matrix[x, y] = min(matrix[x-1, y] + 1,
-                                   matrix[x-1, y-1], matrix[x, y-1] + 1)
-            else:
-                matrix[x, y] = min(matrix[x-1, y] + 1,
-                                   matrix[x-1, y-1] + 1, matrix[x, y-1] + 1)
-    # print(matrix)
-    return (matrix[size_x - 1, size_y - 1])
-
-# Create your views here.
-
-
-def search_and(dict_results):
-    results = set()
-    results.update(dict_results[list(dict_results.keys())[0]])
-
-    for i, j in dict_results.items():
-        results = set(j).intersection(results)
-    results = sorted(list(results))
-    return results
-
-
-def search_or(dict_results):
-    results = set()
-    for i, j in dict_results.items():
-        results.update(j)
-    results = sorted(list(results))
-
-    return results
-
-
-def search_not(dict_results):
-    total = ["{0:0=3d}".format(i) for i in range(1, 501)]
-    results = set()
-    for i, j in dict_results.items():
-        results.update(j)
-    results = sorted(list(results))
-    results_not = [i for i in total if i not in results]
-    print('res', results_not)
-    return results_not
-
-# Preprocessing
-
 
 def get_wordnet_pos(word):
     """Map POS tag to first character lemmatize() accepts"""
@@ -317,148 +96,296 @@ def get_wordnet_pos(word):
                 "R": wordnet.ADV}
     return tag_dict.get(tag, wordnet.NOUN)
 
+def guess_date(string):
+    for fmt in ["%Y/%m/%d", "%d-%m-%Y", "%Y%m%d", "%d-%b-%y", "%d-%m-%y", "%d-%b-%Y", "%d %b %y", "%d %m %y", "%d %b %Y"]:
+        try:
+            return str(datetime.datetime.strptime(string, fmt).date())
+        except ValueError:
+            continue
+    return string
 
 def preprocess(text_process):
-    ps = PorterStemmer()
-    lemmatizer = WordNetLemmatizer()
-
     text_process = text_process.lower()
     tokens = word_tokenize(text_process)
     tokens_clean = join_tags(tokens)
+    tokens_clean = [guess_date(i) for i in tokens_clean]
     stop_words = set(stopwords.words('english'))
-    filtered_words = [w for w in tokens_clean if not w in stop_words]
+    filtered_words = [guess_date(w) for w in tokens_clean if not w in stop_words]
+    ps = PorterStemmer()
     stemmed_words = [ps.stem(w) for w in filtered_words]
-    lemmatized_words = [lemmatizer.lemmatize(
-        w, get_wordnet_pos(w)) for w in stemmed_words]
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_words = [lemmatizer.lemmatize(w, get_wordnet_pos(w)) for w in stemmed_words]
     stemmed_text = ' '.join(stemmed_words)
     lemmatized_text = ' '.join(lemmatized_words)
-    #clean_text = lemmatized_text
     clean_text = lemmatized_text
-    return clean_text
+    clean_words = sorted(list([lemmatizer.lemmatize(w, get_wordnet_pos(w)) for w in stemmed_words]))
+    return clean_text, clean_words
 
+def build_index_language_model():
+    dict_term_doc = dict()
+    clean_words_list = list()
+    raw_words_list = list()
+    dict_term_doc_final = dict()
+    data = dict()
+    key = list()
+    value = list()
+    doc_freqs = dict()
+    
+    start = timeit.default_timer()
+    for index, i in enumerate(os.listdir('Data')):
+        try:
+            filename = i
+            f = open('Data/' + filename, 'r')
+            text = f.read()
+            f.close()
 
+            clean_text, clean_words = preprocess(text)
+            clean_words_list.extend(clean_words)
+
+            doc_freq = 0
+            for w in clean_words:
+                doc_freq+=1
+                doc_freqs[filename[4:7]] = doc_freq
+                if w not in dict_term_doc:
+                    dict_term_doc[w] = [1, {filename[4:7]: 1}]
+                else:
+                    if filename[4:7] in dict_term_doc[w][1]:
+                        dict_term_doc[w][1][filename[4:7]]+=1
+                    else:
+                        dict_term_doc[w][1][filename[4:7]]=1
+                    dict_term_doc[w][0]+=1
+        except Exception as e:
+            print(str(e))
+    
+    stop = timeit.default_timer()
+    return stop-start
+
+def language_model(query, limit, lambd):
+    clean_query_text, clean_query_words = preprocess(query)
+    result_dict = list()
+
+    df_doc_freq = pd.read_csv('Document Frequencies.csv')
+    df = pd.read_csv('Frequencies.csv')
+
+    global_freq = int(open("global_frequency.txt", "r").read())
+
+    start = timeit.default_timer()
+    for i in df_doc_freq.iterrows():
+        local_freq = i[1]['Frequency']
+        doc_number = i[1]['Document']
+        doc_number = str(doc_number).zfill(3)
+        result = 1
+        for j in clean_query_words:
+            entries = df.loc[df['Term'] == j]['Documents'].values[0]
+            entries = entries.split(', ',1)
+            entries[0] = entries[0].replace("[", "")
+            entries[1] = entries[1].replace(']', '')
+            entries[1] = ast.literal_eval(entries[1])
+            if doc_number in entries[1].keys():
+                prob = (float(entries[1][doc_number])/float(local_freq)*lambd) + (float(entries[0])/float(global_freq)*(1-lambd))
+            else:
+                prob = (float(entries[0])/float(global_freq)*(1-lambd))
+            result *= prob
+        result_dict.append((doc_number, result))
+    result_sorted = sorted(result_dict, key=lambda x: x[1], reverse=True)
+    stop = timeit.default_timer()
+    return result_sorted[:limit], stop-start
+    
 def home(request):
     if request.method == 'POST':
         form = SearchForm(request.POST)
         if form.is_valid() and len(form.cleaned_data.get('query')) != 0:
-            start = timeit.default_timer()
-            results = []
             query = form.cleaned_data.get('query')
-            if query[:9].lower() == 'accessed:':
-                user_input = query.lower()
-                user_input = word_tokenize(user_input)
-                user_input = join_tags(user_input)
-                date = parser.parse(user_input[1])
-                query = date.strftime(" %d %b %Y").replace(' 0', ' ')
-                print('qq: ', query)
-                query = query.strip()
-                list_q = query.split()
-                query = 'Accessed: ' + '-'.join(list_q)
-                print('date: ', query)
-
-            docs = search(query)
-
-            # if len(docs) == 0:
-            #     return render(request, 'gui/index.html')
-            print('query:', docs)
-            # initalize numbers variable
-            numbers = set()
-
-            # get correction
-            correction = form.cleaned_data.get('correction')
-            print('correction: ', correction)
-
+            limit = form.cleaned_data.get('limit')
+            lambdaa = form.cleaned_data.get('lambdaa')
             user_input = query.lower()
-            user_input = word_tokenize(user_input)
-            user_input = join_tags(user_input)
-            print('user input: ', user_input)
-            if 'soundex' in correction:
-                user_input = query.lower()
-                user_input = word_tokenize(user_input)
-                user_input = join_tags(user_input)
-                print('user input :', user_input)
-                print('preprocessed: ', preprocess(query))
-                soundex_codes = [soundex(i) for i in user_input]
-                print(soundex_codes)
+            
+            # show = build_index_language_model()
 
-                df_read = pd.read_csv("Konstruksi Indeks.csv")
-                for index, row in df_read.iterrows():
-                    if soundex(row['Term']) in soundex_codes:
-                        # numbers.update(row['Documents'])
-                        numbers.update(row['Documents'].strip(
-                            "[]").replace("'", "").split(', '))
+            docs_results = language_model(user_input, limit, lambdaa)
+            founded = len(docs_results[0])
+            times = docs_results[1]
+            
+            documents = docs_results[0]
 
-            if 'levenshtein' in correction:
-                user_input = query.lower()
-                user_input = word_tokenize(user_input)
-                user_input = join_tags(user_input)
-                print('user input :', user_input)
-                print('preprocessed: ', preprocess(query))
-                threshold = form.cleaned_data.get('threshold')
-                df_read = pd.read_csv("Konstruksi Indeks.csv")
-                for index, row in df_read.iterrows():
-                    for i in user_input:
-                        if levenshtein(row['Term'], i) <= threshold:
-                            numbers.update(row['Documents'].strip(
-                                "[]").replace("'", "").split(', '))
-
-            print('nums:', numbers)
-            # get method (and, or, not)
-            method = form.cleaned_data.get('method')
-            print('method:', method)
-            if method == 'and':
-                numbers.update(search_and(docs))
-            elif method == 'or':
-                numbers.update(search_or(docs))
-            elif method == 'not':
-                numbers.update(search_not(docs))
-
-            numbers = sorted(list(numbers))
-            print(numbers)
-
-            display = form.cleaned_data.get('display')
-            print('display: ', display)
+            results = []
             # read xml
-            for i in numbers:
+            for key,value in documents:
                 dictionary = dict()
-                filename = 'Doc0' + i + '.xml'
+                filename = 'Doc0' + key + '.xml'
                 print('filename: ', filename)
-                if display == 'original':
-                    doc = xml.dom.minidom.parse('XML/' + filename)
-                    title = doc.getElementsByTagName('TITLE')
-                    title = title[0].firstChild.nodeValue
+                doc = xml.dom.minidom.parse('C:/Users/Asus/Downloads/Git/search_engine/XML/' + filename)
+                title = doc.getElementsByTagName('TITLE')
+                title = title[0].firstChild.nodeValue
 
-                    date = doc.getElementsByTagName('DATE')
-                    date = date[0].firstChild.nodeValue
-                    body = doc.getElementsByTagName('BODY')
-                    body = body[0].firstChild.nodeValue
-                elif display == 'clean':
-                    doc = xml.dom.minidom.parse('Clean/' + filename)
-                    title = doc.getElementsByTagName('title')
-                    title = title[0].firstChild.nodeValue
-                    date = doc.getElementsByTagName('date')
-                    date = date[0].firstChild.nodeValue
-                    body = doc.getElementsByTagName('body')
-                    body = body[0].firstChild.nodeValue
-                # print(date)
+                date = doc.getElementsByTagName('DATE')
+                date = date[0].firstChild.nodeValue
+                body = doc.getElementsByTagName('BODY')
+                body = body[0].firstChild.nodeValue
+
+                dictionary['document_no'] = key
+                dictionary['score'] = value
                 dictionary['title'] = title
                 dictionary['date'] = date
                 dictionary['body'] = body
                 results.append(dictionary)
-            # for term, documents in docs.items():
-            #     for no_doc in documents:
-            #         dictionary = dict()
-            #         filename = 'Doc0' + no_doc + '.xml'
-            #         doc = xml.dom.minidom.parse('Clean/' + filename)
-            #         title = doc.getElementsByTagName('title')
-            #         title = title[0].firstChild.nodeValue
-            #         body = doc.getElementsByTagName('body')
-            #         body = body[0].firstChild.nodeValue
-            #         dictionary['title'] = title
-            #         dictionary['body'] = body
-            #         results.append(dictionary)
-            stop = timeit.default_timer()
-            return render(request, 'gui/index.html', {'results': results, 'count': len(results), 'time': stop-start, 'method': method, 'correction': correction, 'display': display, 'query': query})
+
+            return render(request, 'Index.html', {'results' : results, 'times': times, 'founded': founded,  'query': query, 'limit' : len(results), 'lambdaa' : lambdaa, })
     else:
         form = SearchForm()
-    return render(request, 'gui/index.html')
+    return render(request, 'Index.html')
+
+
+# TF IDF
+def build_index_tf_idf():
+    dict_term_doc = dict()
+    clean_words_list = list()
+    raw_words_list = list()
+    dict_term_doc_final = dict()
+    data = dict()
+    key = list()
+    value = list()
+    
+    start = timeit.default_timer()
+    for i in os.listdir('Data'):
+        try:
+            filename = i
+            f = open('Data/' + filename, 'r')
+            text = f.read()
+            f.close()
+
+            clean_text, clean_words = preprocess(text)
+            clean_words_list.extend(clean_words)
+            for w in clean_words:
+                if w not in dict_term_doc:
+                    dict_term_doc[w] = [filename[4:7]]
+                else:
+                    dict_term_doc[w].append(filename[4:7])
+        except Exception as e:
+            print(str(e))
+
+    stop = timeit.default_timer()
+    
+    return stop-start
+
+def tfidf(query):
+    df_tfidf = pd.read_csv('Konstruksi Indeks.csv')
+    doc = df_tfidf['Documents']
+    term = df_tfidf['Term']
+
+    text, data = preprocess(query)
+    z=1
+    count = 1
+    N = 500+1
+    max_range = len(term)
+
+    dict_w = dict()
+    dict_f = dict()
+    dict_tf = dict()
+    dict_idf = dict()
+    dict_dj = dict()
+    dict_sim = dict()
+
+    starts = timeit.default_timer()
+    for q in data:
+        for i in range (0,max_range):
+            ni = 0
+            start = 2
+            end = 5
+            count = 1
+            if (term[i] == q):
+                for y in range (0,int(len(doc[i])/7)):
+                    if(int(len(doc[i])/7)!=1):
+                        if(doc[i][start:end] != doc[i][(start-7):(end-7)]):
+                            ni+=1
+                            dict_f['f',doc[i][start:end]]=count
+                        else:
+                            dict_f['f',doc[i][start:end]]=count
+                            count+=1
+                            ni=1
+                    else:
+                        dict_f['f',doc[i][start:end]]=count
+                        ni+=1
+
+                    start = start+7
+                    end = end+7
+
+                dict_idf[q] = math.log((1+N/ni),10)
+
+
+    for key in dict_f:
+        dict_tf['tf',z] = 1+math.log(dict_f[key],10)
+        z+=1
+
+    z=1
+
+    for key in dict_tf:
+        for key2 in dict_idf:
+            dict_w['w',z] = dict_tf[key]*dict_idf[key2]
+            z+=1
+
+    z=1
+
+    for key in dict_w:
+        dict_dj['dj',z] = math.sqrt(pow(dict_w[key],2))
+        z+=1
+
+    z=1
+    for key in dict_dj:
+        for key2 in dict_w:
+            dict_sim["d",z] = dict_w[key2]/dict_dj[key]
+            z+=1
+            break
+    stop = timeit.default_timer()
+    result = [(i[1], j)for i,j in dict_f.items()]
+    
+    return result, stop-starts 
+    
+def toprank(request):
+    if request.method == 'POST':
+        form = SearchForm2(request.POST)
+        if form.is_valid() and len(form.cleaned_data.get('query')) != 0:
+            query = form.cleaned_data.get('query')
+            user_input = query.lower()
+            docs_results = tfidf(user_input)
+            
+            times = docs_results[1]
+            
+            documents = docs_results[0]
+            founded = len(documents)
+
+            result_dict = list()
+            results = []
+
+            for key,value in documents:
+                result_dict.append((key, value))
+                result_sorted = sorted(result_dict, key=lambda x: x[1], reverse=True)
+            
+            for key, value in result_sorted:
+                dictionary = dict()
+                filename = 'Doc0' + key + '.xml'
+                print('filename: ', filename)
+                # if display == 'original':
+                doc = xml.dom.minidom.parse('C:/Users/Asus/Downloads/Git/search_engine/XML/' + filename)
+                title = doc.getElementsByTagName('TITLE')
+                title = title[0].firstChild.nodeValue
+
+                date = doc.getElementsByTagName('DATE')
+                date = date[0].firstChild.nodeValue
+                body = doc.getElementsByTagName('BODY')
+                body = body[0].firstChild.nodeValue
+                dictionary['document_no'] = key
+                dictionary['score'] = value
+                dictionary['title'] = title
+                dictionary['date'] = date
+                dictionary['body'] = body
+                results.append(dictionary)
+            
+            return render(request, 'TopRank.html', {'results' : results, 'times': times, 'founded': founded, 'query': query, })
+        
+    else:
+        form = SearchForm2()
+    return render(request, 'TopRank.html')
+
+# def buttontoprank(request):
+#     return render(request, 'TopRank.html', {'show': show})
