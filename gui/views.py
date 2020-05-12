@@ -534,9 +534,20 @@ def tfidf(kueri, limit):
         except:
             print("0")
 
+    result_dictionary = dict()
+    if limit > len(dict_sim):
+        limit = len(dict_sim)
+
+    counter = 0
+    for i, j in dict_sim.items():
+        counter += 1
+        result_dictionary[i] = j
+        if counter == limit:
+            break
+        
     stop = timeit.default_timer()
 
-    return dict_sim, stop-starts
+    return result_dictionary, stop-starts
 
 
 def tfidf_ascending(kueri, limit):
@@ -695,9 +706,22 @@ def tfidf_ascending(kueri, limit):
         except:
             print("0")
 
+    
+
+    result_dictionary = dict()
+    if limit > len(dict_sim):
+        limit = len(dict_sim)
+
+    counter = 0
+    for i, j in dict_sim.items():
+        counter += 1
+        result_dictionary[i] = j
+        if counter == limit:
+            break
+        
     stop = timeit.default_timer()
 
-    return dict_sim, stop-starts
+    return result_dictionary, stop-starts
 
 
 def toprank(request):
