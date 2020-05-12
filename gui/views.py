@@ -269,9 +269,17 @@ def home(request):
 
             documents = docs_results[0]
 
+            result_dict = list()
+            results = []
+
+            for key, value in documents:
+                result_dict.append((key, value))
+                result_sorted = sorted(
+                    result_dict[1], key=lambda x: x[0], reverse=True)
+
             results = []
             # read xml
-            for key, value in documents:
+            for key, value in result_sorted:
                 dictionary = dict()
                 filename = 'Doc0' + key + '.xml'
                 doc = xml.dom.minidom.parse('XML/' + filename)
@@ -370,150 +378,328 @@ def build_index_tf_idf():
     return stop-start
 
 
-def tfidf(query, limit):
+def tfidf(kueri, limit):
     df_tfidf = pd.read_csv('Konstruksi Indeks.csv')
     doc = df_tfidf['Documents']
     term = df_tfidf['Term']
-
-    text, data = preprocess(query)
-    z = 1
-    count = 1
-    N = 500+1
+    df_tfidf
     max_range = len(term)
+
+    query = kueri
+    text, data = preprocess(query)
+    
+    z=1
+    count = 1
+    N = 500
+    plus = 0
+    list_angka = list()
+    list_nama = list()
+    list_final = list()
+    list_finalnama = list()
+
+    list_wnama = list()
+    list_wangka = list()
+    list_simnama = list()
+    list_simdoc = list()
+    list_simq = list()
+    list_simqnama = list()
+    list_sim = list()
+    list_finalsim = list()
+    list_finalsim2 = list()
+    list_finalsim2doc = list()
 
     dict_w = dict()
     dict_f = dict()
     dict_tf = dict()
     dict_idf = dict()
     dict_dj = dict()
+    dict_dj2 = dict()
     dict_sim = dict()
 
+    list_rank = list()
+    counter = 0
+
     starts = timeit.default_timer()
+    
     for q in data:
-        for i in range(0, max_range):
-            ni = 0
+        if data[counter]==data[counter-1]:
+            plus+=1
+            dict_f[q] = plus
+        else:
+            plus = 1
+            dict_f[q] = plus
+        counter+=1
+
+    for q in data:
+        for i in range (0,max_range):
+            ni = dict_f[q]
             start = 2
             end = 5
             count = 1
             if (term[i] == q):
-                for y in range(0, int(len(doc[i])/7)):
-                    if(int(len(doc[i])/7) != 1):
+                for y in range (0,int(len(doc[i])/7)):
+                    if(int(len(doc[i])/7)!=1):
                         if(doc[i][start:end] != doc[i][(start-7):(end-7)]):
-                            ni += 1
-                            dict_f['f', doc[i][start:end]] = count
+                            ni+=1
+                            dict_f[q +' doc ' + doc[i][start:end]]=count
                         else:
-                            dict_f['f', doc[i][start:end]] = count
-                            count += 1
-                            ni = 1
+                            dict_f[q + ' doc' + doc[i][start:end]]=count
+                            count+=1
+                            ni=1
                     else:
-                        dict_f['f', doc[i][start:end]] = count
-                        ni += 1
+                        dict_f[q +' doc ' + doc[i][start:end]]=count
+                        ni+=1
 
                     start = start+7
                     end = end+7
 
-                dict_idf[q] = math.log((1+N/ni), 10)
+                dict_idf[q] = math.log((1+N/ni),10)
 
     for key in dict_f:
-        dict_tf['tf', z] = 1+math.log(dict_f[key], 10)
-        z += 1
+        dict_tf[key] = 1+math.log(dict_f[key],10)
 
-    z = 1
 
     for key in dict_tf:
         for key2 in dict_idf:
-            dict_w['w', z] = dict_tf[key]*dict_idf[key2]
-            z += 1
-
-    z = 1
+            if key[0:len(key)-8] == key2:
+                dict_w[key] = dict_tf[key]*dict_idf[key2]
+            elif key == key2:
+                dict_w[key] = dict_tf[key]*dict_idf[key2]
 
     for key in dict_w:
-        dict_dj['dj', z] = math.sqrt(pow(dict_w[key], 2))
-        z += 1
+        if(key[len(key)-7:len(key)-4] == 'doc' ):
+            dict_dj[key[len(key)-7:len(key)]] = (pow(dict_w[key],2))
+            list_angka.append(dict_dj[key[len(key)-7:len(key)]])
+            list_nama.append(key[len(key)-7:len(key)])
+        else:
+            dict_dj[key] = pow(dict_w[key],2)
+            list_nama.append('q')
+            list_angka.append(dict_dj[key])
 
-    z = 1
-    for key in dict_dj:
-        for key2 in dict_w:
-            dict_sim["d", z] = dict_w[key2]/dict_dj[key]
-            z += 1
-            break
+    for i in range(0,len(list_nama)):
+        for x in range(i+1,len(list_nama)):
+            if (list_nama[i]==list_nama[x]):
+
+                list_final.append(math.sqrt(list_angka[i]+list_angka[x]))
+                list_finalnama.append(list_nama[i])
+                # list_angka[i]=0
+                # list_angka[x] = 0
+
+    for i in range(0,len(list_nama)):
+        if list_angka[i]!=0:
+            list_final.append(math.sqrt(list_angka[i]))
+            list_finalnama.append(list_nama[i])
+
+    for i in range(0,len(list_final)):
+        dict_dj2[list_finalnama[i]] = list_final[i]
+
+
+    for key in dict_w:
+        list_wnama.append(key)
+        list_wangka.append(dict_w[key])
+
+    for i in range(0,len(list_wnama)):
+        for x in range(i+1,len(list_wnama)):
+            if(list_wnama[i]==list_wnama[x][0:len(list_wnama[x])-8]):
+                list_simnama.append(list_wnama[x][0:len(list_wnama[x])-8])
+                list_simdoc.append(list_wnama[x][len(list_wnama[x])-7:])
+                list_sim.append(list_wangka[x])
+                list_wangka[x] = 0
+
+    for i in range(0,len(list_wangka)):
+        if(list_wangka[i]!=0):
+            list_simq.append(list_wangka[i])
+            list_simqnama.append(list_wnama[i])
+
+    for i in range(0,len(list_sim)):
+        for y in range(0,len(list_simq)):
+            if(list_simnama[i]==list_simqnama[y]):
+                list_finalsim.append(list_sim[i]*list_simq[y])
+
+    for i in range(0,len(list_finalsim)):
+        for x in range(i+1,len(list_simdoc)):
+            if list_simdoc[i]==list_simdoc[x]:
+                list_finalsim2.append(list_finalsim[i]+list_finalsim[x])
+                list_finalsim[i] = 0
+                list_finalsim[x] = 0
+                list_finalsim2doc.append(list_simdoc[i])
+
+    for i in range(0,len(list_finalsim)):
+        if(list_finalsim[i]!=0):
+            list_finalsim2.append(list_finalsim[i])
+            list_finalsim2doc.append(list_simdoc[i])
+
+    for i in range(0,len(list_finalsim2)):
+        try:
+            dict_sim[list_finalsim2doc[i]] = list_finalsim2[i]/(dict_dj2[list_finalsim2doc[i]]*dict_dj2['q'])
+        except:
+            print("0")
+
     stop = timeit.default_timer()
-    result = [(i[1], j)for i, j in dict_f.items()]
+    
+    return dict_sim, stop-starts
 
-    return result[:limit], stop-starts
 
-
-def tfidf_ascending(query, limit):
+def tfidf_ascending(kueri, limit):
     df_tfidf = pd.read_csv('Konstruksi Indeks.csv')
     doc = df_tfidf['Documents']
     term = df_tfidf['Term']
-
-    text, data = preprocess(query)
-    z = 1
-    count = 1
-    N = 500+1
+    df_tfidf
     max_range = len(term)
+
+    query = kueri
+    text, data = preprocess(query)
+    
+    z=1
+    count = 1
+    N = 500
+    plus = 0
+    list_angka = list()
+    list_nama = list()
+    list_final = list()
+    list_finalnama = list()
+
+    list_wnama = list()
+    list_wangka = list()
+    list_simnama = list()
+    list_simdoc = list()
+    list_simq = list()
+    list_simqnama = list()
+    list_sim = list()
+    list_finalsim = list()
+    list_finalsim2 = list()
+    list_finalsim2doc = list()
 
     dict_w = dict()
     dict_f = dict()
     dict_tf = dict()
     dict_idf = dict()
     dict_dj = dict()
+    dict_dj2 = dict()
     dict_sim = dict()
 
+    list_rank = list()
+    counter = 0
+
     starts = timeit.default_timer()
+    
     for q in data:
-        for i in range(0, max_range):
-            ni = 0
+        if data[counter]==data[counter-1]:
+            plus+=1
+            dict_f[q] = plus
+        else:
+            plus = 1
+            dict_f[q] = plus
+        counter+=1
+
+    for q in data:
+        for i in range (0,max_range):
+            ni = dict_f[q]
             start = 2
             end = 5
             count = 1
             if (term[i] == q):
-                for y in range(0, int(len(doc[i])/7)):
-                    if(int(len(doc[i])/7) != 1):
+                for y in range (0,int(len(doc[i])/7)):
+                    if(int(len(doc[i])/7)!=1):
                         if(doc[i][start:end] != doc[i][(start-7):(end-7)]):
-                            ni += 1
-                            dict_f['f', doc[i][start:end]] = count
+                            ni+=1
+                            dict_f[q +' doc ' + doc[i][start:end]]=count
                         else:
-                            dict_f['f', doc[i][start:end]] = count
-                            count += 1
-                            ni = 1
+                            dict_f[q + ' doc' + doc[i][start:end]]=count
+                            count+=1
+                            ni=1
                     else:
-                        dict_f['f', doc[i][start:end]] = count
-                        ni += 1
+                        dict_f[q +' doc ' + doc[i][start:end]]=count
+                        ni+=1
 
                     start = start+7
                     end = end+7
 
-                dict_idf[q] = math.log((1+N/ni), 10)
+                dict_idf[q] = math.log((1+N/ni),10)
 
     for key in dict_f:
-        dict_tf['tf', z] = 1+math.log(dict_f[key], 10)
-        z += 1
+        dict_tf[key] = 1+math.log(dict_f[key],10)
 
-    z = 1
 
     for key in dict_tf:
         for key2 in dict_idf:
-            dict_w['w', z] = dict_tf[key]*dict_idf[key2]
-            z += 1
-
-    z = 1
+            if key[0:len(key)-8] == key2:
+                dict_w[key] = dict_tf[key]*dict_idf[key2]
+            elif key == key2:
+                dict_w[key] = dict_tf[key]*dict_idf[key2]
 
     for key in dict_w:
-        dict_dj['dj', z] = math.sqrt(pow(dict_w[key], 2))
-        z += 1
+        if(key[len(key)-7:len(key)-4] == 'doc' ):
+            dict_dj[key[len(key)-7:len(key)]] = (pow(dict_w[key],2))
+            list_angka.append(dict_dj[key[len(key)-7:len(key)]])
+            list_nama.append(key[len(key)-7:len(key)])
+        else:
+            dict_dj[key] = pow(dict_w[key],2)
+            list_nama.append('q')
+            list_angka.append(dict_dj[key])
 
-    z = 1
-    for key in dict_dj:
-        for key2 in dict_w:
-            dict_sim["d", z] = dict_w[key2]/dict_dj[key]
-            z += 1
-            break
+    for i in range(0,len(list_nama)):
+        for x in range(i+1,len(list_nama)):
+            if (list_nama[i]==list_nama[x]):
+
+                list_final.append(math.sqrt(list_angka[i]+list_angka[x]))
+                list_finalnama.append(list_nama[i])
+                # list_angka[i]=0
+                # list_angka[x] = 0
+
+    for i in range(0,len(list_nama)):
+        if list_angka[i]!=0:
+            list_final.append(math.sqrt(list_angka[i]))
+            list_finalnama.append(list_nama[i])
+
+    for i in range(0,len(list_final)):
+        dict_dj2[list_finalnama[i]] = list_final[i]
+
+
+    for key in dict_w:
+        list_wnama.append(key)
+        list_wangka.append(dict_w[key])
+
+    for i in range(0,len(list_wnama)):
+        for x in range(i+1,len(list_wnama)):
+            if(list_wnama[i]==list_wnama[x][0:len(list_wnama[x])-8]):
+                list_simnama.append(list_wnama[x][0:len(list_wnama[x])-8])
+                list_simdoc.append(list_wnama[x][len(list_wnama[x])-7:])
+                list_sim.append(list_wangka[x])
+                list_wangka[x] = 0
+
+    for i in range(0,len(list_wangka)):
+        if(list_wangka[i]!=0):
+            list_simq.append(list_wangka[i])
+            list_simqnama.append(list_wnama[i])
+
+    for i in range(0,len(list_sim)):
+        for y in range(0,len(list_simq)):
+            if(list_simnama[i]==list_simqnama[y]):
+                list_finalsim.append(list_sim[i]*list_simq[y])
+
+    for i in range(0,len(list_finalsim)):
+        for x in range(i+1,len(list_simdoc)):
+            if list_simdoc[i]==list_simdoc[x]:
+                list_finalsim2.append(list_finalsim[i]+list_finalsim[x])
+                list_finalsim[i] = 0
+                list_finalsim[x] = 0
+                list_finalsim2doc.append(list_simdoc[i])
+
+    for i in range(0,len(list_finalsim)):
+        if(list_finalsim[i]!=0):
+            list_finalsim2.append(list_finalsim[i])
+            list_finalsim2doc.append(list_simdoc[i])
+
+    for i in range(0,len(list_finalsim2)):
+        try:
+            dict_sim[list_finalsim2doc[i]] = list_finalsim2[i]/(dict_dj2[list_finalsim2doc[i]]*dict_dj2['q'])
+        except:
+            print("0")
+
     stop = timeit.default_timer()
-    result = [(i[1], j)for i, j in dict_f.items()]
-
-    return result[:limit], stop-starts
+    
+    return dict_sim, stop-starts
 
 
 def toprank(request):
@@ -533,8 +719,8 @@ def toprank(request):
             result_dict = list()
             results = []
 
-            for key, value in documents:
-                result_dict.append((key, value))
+            for key, value in documents.items():
+                result_dict.append((key[4:], value))
                 result_sorted = sorted(
                     result_dict, key=lambda x: x[1], reverse=True)
 
@@ -580,8 +766,8 @@ def toprank_ascending(request):
             result_dict = list()
             results = []
 
-            for key, value in documents:
-                result_dict.append((key, value))
+            for key, value in documents.items():
+                result_dict.append((key[4:], value))
                 result_sorted = sorted(
                     result_dict, key=lambda x: x[0], reverse=True)
 
