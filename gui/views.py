@@ -189,7 +189,12 @@ def language_model(query, limit, lambd):
         result = 1
         else_terus = True
         for j in clean_query_words:
-            entries = df.loc[df['Term'] == j]['Documents'].values[0]
+            entries = None
+            try:
+                entries = df.loc[df['Term'] == j]['Documents'].values[0]
+            except:
+                stop = timeit.default_timer()
+                return [], stop-start
             entries = entries.split(', ', 1)
             entries[0] = entries[0].replace("[", "")
             entries[1] = entries[1].replace(']', '')
@@ -208,7 +213,7 @@ def language_model(query, limit, lambd):
         result_dict.append((doc_number, result))
     result_sorted = sorted(result_dict, key=lambda x: x[1], reverse=True)
     stop = timeit.default_timer()
-    if limit > len(result_sorted):
+    if limit > len(result_sorted) or limit == 0:
         limit = len(result_sorted)
     return result_sorted[:limit], stop-start
 
@@ -230,7 +235,11 @@ def language_model_ascending(query, limit, lambd):
         result = 1
         else_terus = True
         for j in clean_query_words:
-            entries = df.loc[df['Term'] == j]['Documents'].values[0]
+            try:
+                entries = df.loc[df['Term'] == j]['Documents'].values[0]
+            except:
+                stop = timeit.default_timer()
+                return [], stop-start
             entries = entries.split(', ', 1)
             entries[0] = entries[0].replace("[", "")
             entries[1] = entries[1].replace(']', '')
@@ -249,7 +258,7 @@ def language_model_ascending(query, limit, lambd):
         result_dict.append((doc_number, result))
     result_sorted = sorted(result_dict, key=lambda x: x[0])
     stop = timeit.default_timer()
-    if limit > len(result_sorted):
+    if limit > len(result_sorted) or limit == 0:
         limit = len(result_sorted)
     return result_sorted[:limit], stop-start
 
@@ -257,9 +266,14 @@ def language_model_ascending(query, limit, lambd):
 def home(request):
     if request.method == 'POST':
         form = SearchForm(request.POST)
+        print(form.is_valid())
         if form.is_valid() and len(form.cleaned_data.get('query')) != 0:
             query = form.cleaned_data.get('query')
-            limit = form.cleaned_data.get('limit')
+            if form.cleaned_data.get('limit') != None:
+                limit = form.cleaned_data.get('limit')
+            else:
+                limit = 0
+            print(limit)
             lambdaa = form.cleaned_data.get('lambdaa')
             user_input = query.lower()
 
@@ -276,24 +290,26 @@ def home(request):
 
             results = []
             # read xml
-            for key, value in result_sorted:
-                dictionary = dict()
-                filename = 'Doc0' + key + '.xml'
-                doc = xml.dom.minidom.parse('XML/' + filename)
-                title = doc.getElementsByTagName('TITLE')
-                title = title[0].firstChild.nodeValue
 
-                date = doc.getElementsByTagName('DATE')
-                date = date[0].firstChild.nodeValue
-                body = doc.getElementsByTagName('BODY')
-                body = body[0].firstChild.nodeValue
+            if len(result_sorted) != 0:
+                for key, value in result_sorted:
+                    dictionary = dict()
+                    filename = 'Doc0' + key + '.xml'
+                    doc = xml.dom.minidom.parse('XML/' + filename)
+                    title = doc.getElementsByTagName('TITLE')
+                    title = title[0].firstChild.nodeValue
 
-                dictionary['document_no'] = key
-                dictionary['score'] = value
-                dictionary['title'] = title
-                dictionary['date'] = date
-                dictionary['body'] = body
-                results.append(dictionary)
+                    date = doc.getElementsByTagName('DATE')
+                    date = date[0].firstChild.nodeValue
+                    body = doc.getElementsByTagName('BODY')
+                    body = body[0].firstChild.nodeValue
+
+                    dictionary['document_no'] = key
+                    dictionary['score'] = value
+                    dictionary['title'] = title
+                    dictionary['date'] = date
+                    dictionary['body'] = body
+                    results.append(dictionary)
 
             return render(request, 'gui/Index.html', {'results': results, 'times': times, 'founded': founded,  'query': query, 'limit': len(results), 'lambdaa': lambdaa, })
     else:
@@ -306,7 +322,10 @@ def home_ascending(request):
         form = SearchForm(request.POST)
         if form.is_valid() and len(form.cleaned_data.get('query')) != 0:
             query = form.cleaned_data.get('query')
-            limit = form.cleaned_data.get('limit')
+            if form.cleaned_data.get('limit') != None:
+                limit = form.cleaned_data.get('limit')
+            else:
+                limit = 0
             lambdaa = form.cleaned_data.get('lambdaa')
             user_input = query.lower()
 
@@ -532,7 +551,7 @@ def tfidf(kueri, limit):
             print("0")
 
     result_dictionary = dict()
-    if limit > len(dict_sim):
+    if limit > len(dict_sim) or limit == 0:
         limit = len(dict_sim)
 
     counter = 0
@@ -704,7 +723,7 @@ def tfidf_ascending(kueri, limit):
             print("0")
 
     result_dictionary = dict()
-    if limit > len(dict_sim):
+    if limit > len(dict_sim) or limit == 0:
         limit = len(dict_sim)
 
     counter = 0
@@ -724,7 +743,10 @@ def toprank(request):
         form = SearchForm2(request.POST)
         if form.is_valid() and len(form.cleaned_data.get('query')) != 0:
             query = form.cleaned_data.get('query')
-            limit = form.cleaned_data.get('limit')
+            if form.cleaned_data.get('limit') != None:
+                limit = form.cleaned_data.get('limit')
+            else:
+                limit = 0
             user_input = query.lower()
             docs_results = tfidf(user_input, limit)
 
@@ -771,7 +793,10 @@ def toprank_ascending(request):
         form = SearchForm2(request.POST)
         if form.is_valid() and len(form.cleaned_data.get('query')) != 0:
             query = form.cleaned_data.get('query')
-            limit = form.cleaned_data.get('limit')
+            if form.cleaned_data.get('limit') != None:
+                limit = form.cleaned_data.get('limit')
+            else:
+                limit = 0
             user_input = query.lower()
             docs_results = tfidf_ascending(user_input, limit)
 
