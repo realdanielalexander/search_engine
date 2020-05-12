@@ -106,7 +106,12 @@
                     <!-- <p>{{test}}</p>
                     <p>{{ results }}</p> -->
                     {% if query %}
-                    <p style="float:left;">Result Found: {{ founded }} &emsp;&emsp;&emsp;&emsp; Time taken: {{ times }}
+                    <p style="float:left;">
+                        Query: {{ query }} &emsp;&emsp;&emsp;&emsp;
+                        Result Found: {{ founded }} &emsp;&emsp;&emsp;&emsp;
+                        Top Rank: {{ limit }} &emsp;&emsp;&emsp;&emsp;
+                        Lambda: {{ lambdaa }} &emsp;&emsp;&emsp;&emsp;
+                        Time taken: {{ times }}
                         seconds &emsp;&emsp;&emsp;&emsp;
                         <!-- {% if butto %}
                         Build Index : {{ show }}
@@ -175,7 +180,7 @@
                     url: "/ajax/more",
                     success: function (data) {
                         $('.build-index').attr('disabled', 'disabled');
-                        $('.time-taken').append("<img class=\"loading\" src=\"{% static 'gui/ajax-loader.gif' %}\" alt=\"ewew\">");
+                        $('.time-taken').append("<img class=\"loading\" src=\"{% static 'gui/ajax-loader.gif' %}\" alt=\"Loading...\">");
                         $.ajax({
                             type: "GET",
                             url: "/ajax/build-index-language-model",
