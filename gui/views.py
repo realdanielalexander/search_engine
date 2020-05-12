@@ -272,10 +272,7 @@ def home(request):
             result_dict = list()
             results = []
 
-            for key, value in documents:
-                result_dict.append((key, value))
-                result_sorted = sorted(
-                    result_dict[1], key=lambda x: x[0], reverse=True)
+            result_sorted = sorted(documents, key=lambda x: x[0], reverse=True)
 
             results = []
             # read xml
@@ -544,7 +541,7 @@ def tfidf(kueri, limit):
         result_dictionary[i] = j
         if counter == limit:
             break
-        
+
     stop = timeit.default_timer()
 
     return result_dictionary, stop-starts
@@ -706,8 +703,6 @@ def tfidf_ascending(kueri, limit):
         except:
             print("0")
 
-    
-
     result_dictionary = dict()
     if limit > len(dict_sim):
         limit = len(dict_sim)
@@ -718,7 +713,7 @@ def tfidf_ascending(kueri, limit):
         result_dictionary[i] = j
         if counter == limit:
             break
-        
+
     stop = timeit.default_timer()
 
     return result_dictionary, stop-starts
